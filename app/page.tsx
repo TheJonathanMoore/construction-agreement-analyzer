@@ -5,15 +5,34 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 
 export default function Home() {
+  const [file, setFile] = useState<File | null>(null);
   const [agreementText, setAgreementText] = useState('');
   const [analysis, setAnalysis] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [inputMode, setInputMode] = useState<'file' | 'text'>('file');
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile && selectedFile.type === 'application/pdf') {
+      setFile(selectedFile);
+      setError('');
+    } else {
+      setError('Please select a valid PDF file');
+      setFile(null);
+    }
+  };
 
   const handleAnalyze = async () => {
-    if (!agreementText.trim()) {
+    if (inputMode === 'file' && !file) {
+      setError('Please upload a PDF file');
+      return;
+    }
+
+    if (inputMode === 'text' && !agreementText.trim()) {
       setError('Please enter agreement text');
       return;
     }
@@ -23,12 +42,17 @@ export default function Home() {
     setAnalysis('');
 
     try {
+      const formData = new FormData();
+
+      if (inputMode === 'file' && file) {
+        formData.append('file', file);
+      } else {
+        formData.append('text', agreementText);
+      }
+
       const response = await fetch('/api/analyze', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ agreementText }),
+        body: formData,
       });
 
       const data = await response.json();
@@ -66,20 +90,56 @@ export default function Home() {
             <CardHeader>
               <CardTitle>Agreement Input</CardTitle>
               <CardDescription>
-                Paste your construction agreement text below
+                Upload a PDF or paste your construction agreement text
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="agreement">Agreement Text</Label>
-                <Textarea
-                  id="agreement"
-                  placeholder="Paste your construction agreement here..."
-                  value={agreementText}
-                  onChange={(e) => setAgreementText(e.target.value)}
-                  className="min-h-[400px] font-mono text-sm"
-                />
+              <div className="flex gap-2 mb-4">
+                <Button
+                  variant={inputMode === 'file' ? 'default' : 'outline'}
+                  onClick={() => setInputMode('file')}
+                  size="sm"
+                >
+                  Upload PDF
+                </Button>
+                <Button
+                  variant={inputMode === 'text' ? 'default' : 'outline'}
+                  onClick={() => setInputMode('text')}
+                  size="sm"
+                >
+                  Paste Text
+                </Button>
               </div>
+
+              {inputMode === 'file' ? (
+                <div className="space-y-2">
+                  <Label htmlFor="file">Upload PDF</Label>
+                  <Input
+                    id="file"
+                    type="file"
+                    accept="application/pdf"
+                    onChange={handleFileChange}
+                    className="cursor-pointer"
+                  />
+                  {file && (
+                    <p className="text-sm text-muted-foreground">
+                      Selected: {file.name}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label htmlFor="agreement">Agreement Text</Label>
+                  <Textarea
+                    id="agreement"
+                    placeholder="Paste your construction agreement here..."
+                    value={agreementText}
+                    onChange={(e) => setAgreementText(e.target.value)}
+                    className="min-h-[400px] font-mono text-sm"
+                  />
+                </div>
+              )}
+
               {error && (
                 <div className="text-sm text-destructive">
                   {error}
