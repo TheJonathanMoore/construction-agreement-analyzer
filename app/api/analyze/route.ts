@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { NextRequest, NextResponse } from 'next/server';
-import pdf from 'pdf-parse';
+import * as pdfParse from 'pdf-parse';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     if (file) {
       // Handle PDF upload
       const buffer = Buffer.from(await file.arrayBuffer());
-      const data = await pdf(buffer);
+      const data = await pdfParse.default(buffer);
       agreementText = data.text;
     } else if (textInput) {
       // Handle text input
