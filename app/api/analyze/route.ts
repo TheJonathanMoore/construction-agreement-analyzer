@@ -1,6 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { NextRequest, NextResponse } from 'next/server';
-import * as pdfParse from 'pdf-parse';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -62,26 +61,33 @@ export async function POST(request: NextRequest) {
     const file = formData.get('file') as File;
     const textInput = formData.get('text') as string;
 
-    let agreementText = '';
+    let messageContent: Anthropic.MessageParam['content'];
 
     if (file) {
-      // Handle PDF upload
-      const buffer = Buffer.from(await file.arrayBuffer());
-      const data = await pdfParse.default(buffer);
-      agreementText = data.text;
+      // Handle PDF upload - send directly to Claude
+      const bytes = await file.arrayBuffer();
+      const base64 = Buffer.from(bytes).toString('base64');
+
+      messageContent = [
+        {
+          type: 'document',
+          source: {
+            type: 'base64',
+            media_type: 'application/pdf',
+            data: base64,
+          },
+        },
+        {
+          type: 'text',
+          text: 'Please analyze this construction agreement and provide a structured job summary.',
+        },
+      ];
     } else if (textInput) {
       // Handle text input
-      agreementText = textInput;
+      messageContent = textInput;
     } else {
       return NextResponse.json(
         { error: 'Either a PDF file or text input is required' },
-        { status: 400 }
-      );
-    }
-
-    if (!agreementText.trim()) {
-      return NextResponse.json(
-        { error: 'No text could be extracted from the input' },
         { status: 400 }
       );
     }
@@ -93,7 +99,7 @@ export async function POST(request: NextRequest) {
       messages: [
         {
           role: 'user',
-          content: agreementText,
+          content: messageContent,
         },
       ],
     });
