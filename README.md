@@ -1,36 +1,89 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Construction Agreement Analyzer
+
+AI-powered construction agreement analyzer for exteriors companies. Built with Next.js, React, Shadcn UI, and Claude AI.
+
+## Features
+
+- **AI-Powered Analysis**: Uses Claude AI to extract and structure information from construction agreements
+- **Clean Interface**: Built with Shadcn UI components for a modern, professional look
+- **Instant Results**: Get formatted job summaries in seconds
+- **Copy to Clipboard**: Easily copy the generated summary for use in other documents
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+ installed
+- An Anthropic API key ([Get one here](https://console.anthropic.com/))
+
+### Installation
+
+1. Clone the repository
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Create a `.env.local` file in the root directory:
+   ```bash
+   cp .env.example .env.local
+   ```
+
+4. Add your Anthropic API key to `.env.local`:
+   ```
+   ANTHROPIC_API_KEY=your_api_key_here
+   ```
+
+### Running Locally
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Deploying to Vercel
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### One-Click Deploy
 
-## Learn More
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=YOUR_REPO_URL)
 
-To learn more about Next.js, take a look at the following resources:
+### Manual Deploy
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Push your code to a Git repository (GitHub, GitLab, or Bitbucket)
+2. Import your repository in [Vercel](https://vercel.com/new)
+3. Add your environment variable:
+   - Key: `ANTHROPIC_API_KEY`
+   - Value: Your Anthropic API key
+4. Click "Deploy"
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Usage
 
-## Deploy on Vercel
+1. Paste your construction agreement text into the left panel
+2. Click "Analyze Agreement"
+3. View the structured job summary in the right panel
+4. Click "Copy to Clipboard" to copy the formatted summary
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Output Format
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The analyzer extracts and formats the following information:
+- Client and job details
+- Work to complete (roof, gutters, etc.)
+- Upgrades included
+- Excluded items
+- Job notes
+- Warranty information
+- Contract total
+
+## Tech Stack
+
+- **Framework**: Next.js 15 with App Router
+- **UI Library**: React 18
+- **Styling**: Tailwind CSS
+- **Components**: Shadcn UI
+- **AI**: Anthropic Claude (Sonnet 3.5)
+- **Deployment**: Vercel
+
+## License
+
+MIT
