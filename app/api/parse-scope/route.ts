@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
     const file = formData.get('file') as File | null;
     const text = formData.get('text') as string | null;
 
-    let messageContent: string | Array<{ type: string; source?: { type: string; media_type: string; data: string }; text?: string }>;
+    let messageContent;
 
     if (file) {
       // Use Claude's native PDF vision capabilities
@@ -85,15 +85,15 @@ export async function POST(request: NextRequest) {
 
       messageContent = [
         {
-          type: 'document',
+          type: 'document' as const,
           source: {
-            type: 'base64',
-            media_type: 'application/pdf',
+            type: 'base64' as const,
+            media_type: 'application/pdf' as const,
             data: base64Pdf,
           },
         },
         {
-          type: 'text',
+          type: 'text' as const,
           text: 'Please parse this insurance document and extract the scope items.',
         },
       ];
@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
       messages: [
         {
           role: 'user',
-          content: messageContent,
+          content: messageContent as any, // eslint-disable-line @typescript-eslint/no-explicit-any
         },
       ],
     });
