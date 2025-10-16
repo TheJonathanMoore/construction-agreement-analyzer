@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
     const file = formData.get('file') as File | null;
     const text = formData.get('text') as string | null;
 
-    let messageContent: any;
+    let messageContent: string | Array<{ type: string; source?: { type: string; media_type: string; data: string }; text?: string }>;
 
     if (file) {
       // Use Claude's native PDF vision capabilities
