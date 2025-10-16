@@ -77,7 +77,7 @@ export default function FinalizePage() {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const rect = canvas.getClientRect();
+    const rect = canvas.getBoundingClientRect();
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
