@@ -32,6 +32,7 @@ interface Trade {
 
 export default function FinalizePage() {
   const [trades, setTrades] = useState<Trade[]>([]);
+  const [deductible, setDeductible] = useState<number>(0);
   const [signature, setSignature] = useState<string>('');
   const [customerName, setCustomerName] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
@@ -41,7 +42,14 @@ export default function FinalizePage() {
   useEffect(() => {
     const storedData = sessionStorage.getItem('scopeData');
     if (storedData) {
-      setTrades(JSON.parse(storedData));
+      const parsed = JSON.parse(storedData);
+      // Handle both old format (just array) and new format (object with trades and deductible)
+      if (Array.isArray(parsed)) {
+        setTrades(parsed);
+      } else {
+        setTrades(parsed.trades || []);
+        setDeductible(parsed.deductible || 0);
+      }
     }
   }, []);
 
@@ -246,10 +254,20 @@ export default function FinalizePage() {
 
         {/* Total */}
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex justify-between items-center text-2xl font-bold">
-              <span>Total Contract Value:</span>
-              <span>${calculateTotal().toLocaleString()}</span>
+          <CardContent className="pt-6 space-y-3">
+            <div className="flex justify-between items-center text-lg">
+              <span>Total RCV:</span>
+              <span className="font-mono">${calculateTotal().toLocaleString()}</span>
+            </div>
+            {deductible > 0 && (
+              <div className="flex justify-between items-center text-lg text-red-600">
+                <span>Deductible:</span>
+                <span className="font-mono">-${deductible.toLocaleString()}</span>
+              </div>
+            )}
+            <div className="flex justify-between items-center text-2xl font-bold border-t pt-3">
+              <span>Net Contract Value:</span>
+              <span>${(calculateTotal() - deductible).toLocaleString()}</span>
             </div>
           </CardContent>
         </Card>

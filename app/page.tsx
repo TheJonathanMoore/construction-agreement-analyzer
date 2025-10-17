@@ -295,6 +295,7 @@ function ScopeBuilderView() {
   const [inputMode, setInputMode] = useState<'file' | 'text'>('file');
   const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
   const [expandedSupplements, setExpandedSupplements] = useState<Set<string>>(new Set());
+  const [deductible, setDeductible] = useState<number>(0);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -747,10 +748,29 @@ function ScopeBuilderView() {
                   <span>Total RCV:</span>
                   <span>${totalRcv.toLocaleString()}</span>
                 </div>
+
+                <div className="space-y-2 pt-2 border-t">
+                  <Label htmlFor="deductible" className="text-sm">
+                    Deductible
+                  </Label>
+                  <Input
+                    id="deductible"
+                    type="number"
+                    value={deductible || ''}
+                    onChange={(e) => setDeductible(parseFloat(e.target.value) || 0)}
+                    placeholder="0"
+                  />
+                </div>
+
+                <div className="flex justify-between items-center text-xl font-bold border-t pt-3">
+                  <span>Net Total:</span>
+                  <span>${(totalRcv - deductible).toLocaleString()}</span>
+                </div>
+
                 <Button
                   onClick={() => {
-                    // Store trades in sessionStorage and navigate
-                    sessionStorage.setItem('scopeData', JSON.stringify(trades));
+                    // Store trades and deductible in sessionStorage and navigate
+                    sessionStorage.setItem('scopeData', JSON.stringify({ trades, deductible }));
                     window.location.href = '/finalize';
                   }}
                   className="w-full"
