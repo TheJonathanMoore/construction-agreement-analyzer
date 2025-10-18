@@ -297,6 +297,22 @@ function ScopeBuilderView() {
   const [expandedSupplements, setExpandedSupplements] = useState<Set<string>>(new Set());
   const [deductible, setDeductible] = useState<number>(0);
 
+  // Load saved data on mount
+  useEffect(() => {
+    const storedData = sessionStorage.getItem('scopeData');
+    if (storedData) {
+      try {
+        const parsed = JSON.parse(storedData);
+        if (parsed.trades && Array.isArray(parsed.trades)) {
+          setTrades(parsed.trades);
+          setDeductible(parsed.deductible || 0);
+        }
+      } catch (e) {
+        console.error('Error loading saved scope data:', e);
+      }
+    }
+  }, []);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile && selectedFile.type === 'application/pdf') {
@@ -343,10 +359,23 @@ function ScopeBuilderView() {
       }
 
       setTrades(data.trades);
+      // Save immediately after parsing
+      sessionStorage.setItem('scopeData', JSON.stringify({ trades: data.trades, deductible }));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleClear = () => {
+    if (confirm('Are you sure you want to clear all data? This cannot be undone.')) {
+      setTrades([]);
+      setDeductible(0);
+      setFile(null);
+      setInsuranceText('');
+      setError('');
+      sessionStorage.removeItem('scopeData');
     }
   };
 
@@ -513,6 +542,13 @@ function ScopeBuilderView() {
 
   const { totalRcv, tradeTotals, totalSupplements } = calculateTotals();
 
+  // Auto-save whenever trades or deductible changes
+  useEffect(() => {
+    if (trades.length > 0) {
+      sessionStorage.setItem('scopeData', JSON.stringify({ trades, deductible }));
+    }
+  }, [trades, deductible]);
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <Card>
@@ -587,10 +623,24 @@ function ScopeBuilderView() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Scope Breakdown</CardTitle>
-          <CardDescription>
-            Select trades and line items to include
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Scope Breakdown</CardTitle>
+              <CardDescription>
+                Select trades and line items to include
+              </CardDescription>
+            </div>
+            {trades.length > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleClear}
+                className="text-red-600 hover:text-red-700"
+              >
+                Clear All
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           {trades.length > 0 ? (
