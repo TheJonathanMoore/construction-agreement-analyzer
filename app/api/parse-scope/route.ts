@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { NextRequest, NextResponse } from 'next/server';
+import pdf from 'pdf-parse';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -104,29 +105,26 @@ export async function POST(request: NextRequest) {
     const file = formData.get('file') as File | null;
     const text = formData.get('text') as string | null;
 
-    let messageContent;
+    let extractedText: string;
 
     if (file) {
-      // Use Claude's native PDF vision capabilities
+      // Extract text from PDF using pdf-parse
       const arrayBuffer = await file.arrayBuffer();
-      const base64Pdf = Buffer.from(arrayBuffer).toString('base64');
+      const buffer = Buffer.from(arrayBuffer);
 
-      messageContent = [
-        {
-          type: 'document' as const,
-          source: {
-            type: 'base64' as const,
-            media_type: 'application/pdf' as const,
-            data: base64Pdf,
-          },
-        },
-        {
-          type: 'text' as const,
-          text: 'Please parse this insurance document and extract the scope items.',
-        },
-      ];
+      try {
+        const pdfData = await pdf(buffer);
+        extractedText = pdfData.text;
+
+        if (!extractedText || extractedText.trim().length === 0) {
+          throw new Error('No text could be extracted from the PDF. The file may be scanned or image-based.');
+        }
+      } catch (pdfError) {
+        console.error('PDF extraction error:', pdfError);
+        throw new Error('Failed to extract text from PDF. Please try pasting the text directly instead.');
+      }
     } else if (text) {
-      messageContent = text;
+      extractedText = text;
     } else {
       return NextResponse.json(
         { error: 'Either file or text is required' },
@@ -141,7 +139,7 @@ export async function POST(request: NextRequest) {
       messages: [
         {
           role: 'user',
-          content: messageContent as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+          content: `Please parse this insurance document and extract the scope items.\n\n${extractedText}`,
         },
       ],
     });
@@ -150,16 +148,19 @@ export async function POST(request: NextRequest) {
       ? message.content[0].text
       : '';
 
-    // Strip markdown code blocks if present
+    // Strip markdown code blocks if present (more robust approach)
     let jsonString = result.trim();
-    if (jsonString.startsWith('```json')) {
-      jsonString = jsonString.replace(/^```json\n/, '').replace(/\n```$/, '');
-    } else if (jsonString.startsWith('```')) {
-      jsonString = jsonString.replace(/^```\n/, '').replace(/\n```$/, '');
+
+    // Remove markdown code blocks with any language identifier
+    if (jsonString.startsWith('```')) {
+      // Remove opening ``` and everything until newline
+      jsonString = jsonString.replace(/^```[a-z]*\n/i, '');
+      // Remove closing ```
+      jsonString = jsonString.replace(/\n```\s*$/, '');
     }
 
     // Parse the JSON response
-    const parsedResult = JSON.parse(jsonString);
+    const parsedResult = JSON.parse(jsonString.trim());
 
     return NextResponse.json(parsedResult);
   } catch (error) {
@@ -173,8 +174,8 @@ export async function POST(request: NextRequest) {
         errorMessage = 'API rate limit reached. Please wait a moment and try again.';
       } else if (error.message.includes('Unexpected token')) {
         errorMessage = 'Unable to parse the AI response. Please try again or use the text input method.';
-      } else if (error.message.includes('base64')) {
-        errorMessage = 'Error processing PDF. Please ensure the file is a valid PDF or try pasting the text instead.';
+      } else if (error.message.includes('No text could be extracted') || error.message.includes('Failed to extract text')) {
+        errorMessage = error.message; // Use the specific PDF extraction error
       } else {
         errorMessage = `Error: ${error.message}`;
       }

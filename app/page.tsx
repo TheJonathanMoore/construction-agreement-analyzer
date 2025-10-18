@@ -760,6 +760,9 @@ function ScopeBuilderView() {
                       {trade.lineItems.map((item) => (
                         <div key={item.id} className="space-y-2">
                           <div className="flex items-start gap-3">
+                            <span className="text-xs text-muted-foreground mt-1 min-w-[60px]">
+                              {item.id}
+                            </span>
                             <input
                               type="checkbox"
                               checked={item.checked}
