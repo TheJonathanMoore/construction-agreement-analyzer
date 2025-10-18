@@ -255,20 +255,28 @@ export default function FinalizePage() {
         {/* Total */}
         <Card>
           <CardContent className="pt-6 space-y-3">
-            <div className="flex justify-between items-center text-lg">
+            <div className="flex justify-between items-center text-xl font-bold">
               <span>Total RCV:</span>
               <span className="font-mono">${calculateTotal().toLocaleString()}</span>
             </div>
             {deductible > 0 && (
-              <div className="flex justify-between items-center text-lg text-red-600">
-                <span>Deductible:</span>
-                <span className="font-mono">-${deductible.toLocaleString()}</span>
-              </div>
+              <>
+                <div className="border-t pt-3 space-y-2">
+                  <div className="flex justify-between items-center text-lg">
+                    <span>Less Deductible:</span>
+                    <span className="font-mono text-red-600">-${deductible.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-lg font-semibold">
+                    <span>Insurance Will Pay:</span>
+                    <span className="font-mono text-green-600">${(calculateTotal() - deductible).toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-lg">
+                    <span>Homeowner Pays:</span>
+                    <span className="font-mono">${deductible.toLocaleString()}</span>
+                  </div>
+                </div>
+              </>
             )}
-            <div className="flex justify-between items-center text-2xl font-bold border-t pt-3">
-              <span>Net Contract Value:</span>
-              <span>${(calculateTotal() - deductible).toLocaleString()}</span>
-            </div>
           </CardContent>
         </Card>
 

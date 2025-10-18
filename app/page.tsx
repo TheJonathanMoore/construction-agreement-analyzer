@@ -741,7 +741,7 @@ function ScopeBuilderView() {
 
               <div className="border-t pt-4 mt-4 space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Supplements:</span>
+                  <span className="text-sm text-muted-foreground">Pending Supplements:</span>
                   <span className="text-sm font-mono">${totalSupplements.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between items-center text-lg font-semibold">
@@ -762,9 +762,15 @@ function ScopeBuilderView() {
                   />
                 </div>
 
-                <div className="flex justify-between items-center text-xl font-bold border-t pt-3">
-                  <span>Net Total:</span>
-                  <span>${(totalRcv - deductible).toLocaleString()}</span>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center text-lg">
+                    <span>Insurance Will Pay:</span>
+                    <span className="font-mono">${(totalRcv - deductible).toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-lg">
+                    <span>Homeowner Pays:</span>
+                    <span className="font-mono">${deductible.toLocaleString()}</span>
+                  </div>
                 </div>
 
                 <Button
