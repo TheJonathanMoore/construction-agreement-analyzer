@@ -5,14 +5,34 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-const SYSTEM_PROMPT = `You are an insurance document parser for construction projects. Your job is to extract scope items from insurance documents and organize them by trade.
+const SYSTEM_PROMPT = `You are an expert insurance document parser for construction projects. Your job is to extract ALL scope items from insurance documents and organize them by trade with COMPLETE accuracy.
 
-Parse the insurance document and extract all line items, grouping them by trade/category (e.g., Roof, Gutters, Siding, Fencing, etc.).
+CRITICAL INSTRUCTIONS:
+1. Read the ENTIRE document carefully - do not skip any sections
+2. Extract EVERY SINGLE line item, no matter how small
+3. Look for items in tables, lists, appendices, and summary sections
+4. Common trade categories include but are not limited to:
+   - Roofing (tear-off, shingles, underlayment, ridge cap, valley metal, drip edge, ice & water shield, etc.)
+   - Gutters & Downspouts (gutters, downspouts, end caps, miters, hangers, etc.)
+   - Siding (removal, installation, trim, soffit, fascia, etc.)
+   - Windows & Doors
+   - Painting (exterior, interior, prep work, etc.)
+   - Decking/Framing
+   - Fencing
+   - Miscellaneous/General Conditions (permits, dumpster, cleanup, supervision, etc.)
 
 For each line item, extract:
-1. Quantity (number and unit, e.g., "120 LF", "1 EA", "45 SQ")
-2. Description (the work to be done)
-3. RCV value (Replacement Cost Value in dollars)
+1. Quantity (number and unit, e.g., "120 LF", "45 SQ", "1 EA", "8 HR") - if no quantity listed, use "1 EA"
+2. Description (the complete work description exactly as written)
+3. RCV value (Replacement Cost Value in dollars - extract the number only, no symbols)
+
+PARSING GUIDELINES:
+- If an item says "R&R" or "Remove and Replace", include the full description
+- Include labor AND material line items separately if listed
+- Extract unit prices and quantities separately (e.g., "10 SQ @ $350/SQ = $3,500" should show quantity "10 SQ")
+- Look for subtotals and line items under each trade section
+- Include allowances, overhead, profit if listed
+- Don't combine line items - keep each separate
 
 Output the result as a JSON array with this exact structure:
 
@@ -63,12 +83,20 @@ Output the result as a JSON array with this exact structure:
 
 Important rules:
 - All items should be checked: true by default
-- Use descriptive trade names (capitalize properly)
+- Use descriptive trade names (capitalize properly: "Roofing", "Gutters & Downspouts", etc.)
 - Parse RCV values carefully, removing any currency symbols or commas
-- Generate unique IDs for trades and line items
+- Generate unique IDs for trades and line items (use format: "trade-1", "trade-2", "item-1", "item-2", etc.)
 - Group related items logically by trade
-- If you can't determine the trade, use "Other" or "General"
-- Return ONLY the JSON, no additional text or explanation`;
+- If you can't determine the trade, use "Miscellaneous" or "General Conditions"
+- If the document has page numbers or references multiple pages, make sure to read ALL pages
+- Return ONLY the JSON, no additional text or explanation
+- COMPLETENESS IS CRITICAL: Extract every single line item from the document
+
+DOUBLE-CHECK before returning:
+- Did you read the entire document?
+- Did you extract items from all sections/pages?
+- Are all dollar amounts captured?
+- Did you include small items like nails, caulking, cleanup, etc.?`;
 
 export async function POST(request: NextRequest) {
   try {
@@ -108,7 +136,7 @@ export async function POST(request: NextRequest) {
 
     const message = await anthropic.messages.create({
       model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 4096,
+      max_tokens: 8192,
       system: SYSTEM_PROMPT,
       messages: [
         {

@@ -595,6 +595,12 @@ function ScopeBuilderView() {
         <CardContent className="space-y-4">
           {trades.length > 0 ? (
             <>
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+                <p className="text-sm text-yellow-800">
+                  <strong>⚠️ Please verify:</strong> Review all line items below to ensure completeness.
+                  You can manually add any missing items as supplements.
+                </p>
+              </div>
               <div className="space-y-6 max-h-[600px] overflow-y-auto pr-2">
                 {trades.map((trade) => (
                   <div key={trade.id} className="border rounded-lg p-4">
