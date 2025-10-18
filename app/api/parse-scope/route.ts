@@ -164,8 +164,24 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(parsedResult);
   } catch (error) {
     console.error('Error parsing insurance document:', error);
+
+    // Provide more specific error messages
+    let errorMessage = 'Failed to parse insurance document';
+
+    if (error instanceof Error) {
+      if (error.message.includes('429') || error.message.includes('rate_limit')) {
+        errorMessage = 'API rate limit reached. Please wait a moment and try again.';
+      } else if (error.message.includes('Unexpected token')) {
+        errorMessage = 'Unable to parse the AI response. Please try again or use the text input method.';
+      } else if (error.message.includes('base64')) {
+        errorMessage = 'Error processing PDF. Please ensure the file is a valid PDF or try pasting the text instead.';
+      } else {
+        errorMessage = `Error: ${error.message}`;
+      }
+    }
+
     return NextResponse.json(
-      { error: 'Failed to parse insurance document' },
+      { error: errorMessage },
       { status: 500 }
     );
   }

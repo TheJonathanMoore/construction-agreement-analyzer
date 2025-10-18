@@ -352,16 +352,26 @@ function ScopeBuilderView() {
         body: formData,
       });
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        throw new Error('Server returned an invalid response. Please try again.');
+      }
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to parse insurance document');
+      }
+
+      if (!data.trades || !Array.isArray(data.trades)) {
+        throw new Error('Invalid data format received. Please try again.');
       }
 
       setTrades(data.trades);
       // Save immediately after parsing
       sessionStorage.setItem('scopeData', JSON.stringify({ trades: data.trades, deductible }));
     } catch (err) {
+      console.error('Parse error:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
