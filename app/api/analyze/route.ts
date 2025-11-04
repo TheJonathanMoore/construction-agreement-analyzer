@@ -58,35 +58,36 @@ Instructions:
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
-    const file = formData.get('file') as File | null;
-    const text = formData.get('text') as string | null;
+    const file = formData.get('file') as File;
+    const textInput = formData.get('text') as string;
 
-    let messageContent;
+    let messageContent: Anthropic.MessageParam['content'];
 
     if (file) {
-      // Use Claude's native PDF vision capabilities
-      const arrayBuffer = await file.arrayBuffer();
-      const base64Pdf = Buffer.from(arrayBuffer).toString('base64');
+      // Handle PDF upload - send directly to Claude
+      const bytes = await file.arrayBuffer();
+      const base64 = Buffer.from(bytes).toString('base64');
 
       messageContent = [
         {
-          type: 'document' as const,
+          type: 'document',
           source: {
-            type: 'base64' as const,
-            media_type: 'application/pdf' as const,
-            data: base64Pdf,
+            type: 'base64',
+            media_type: 'application/pdf',
+            data: base64,
           },
         },
         {
-          type: 'text' as const,
-          text: 'Please analyze this construction agreement and create a job summary.',
+          type: 'text',
+          text: 'Please analyze this construction agreement and provide a structured job summary.',
         },
       ];
-    } else if (text) {
-      messageContent = text;
+    } else if (textInput) {
+      // Handle text input
+      messageContent = textInput;
     } else {
       return NextResponse.json(
-        { error: 'Either file or text is required' },
+        { error: 'Either a PDF file or text input is required' },
         { status: 400 }
       );
     }
@@ -98,7 +99,7 @@ export async function POST(request: NextRequest) {
       messages: [
         {
           role: 'user',
-          content: messageContent as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+          content: messageContent,
         },
       ],
     });
